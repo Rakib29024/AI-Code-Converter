@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini Code Converter</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.css" />
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.js"></script>
+  <style>
+    body { font-family: "Inter", sans-serif; background: #f8fafc; padding: 20px; color: #333; }
+    .container { max-width: 1200px; margin: auto; }
+    h2 { text-align: center; margin-bottom: 20px; }
+    .editor-container { display: flex; gap: 20px; }
+    .editor { flex: 1; background: white; border: 1px solid #ccc; border-radius: 8px; overflow: hidden; }
+    .editor-title { background: #2563eb; color: white; padding: 8px 12px; font-weight: bold; font-size: 14px; }
+    .CodeMirror { height: 300px; border: none; }
+    textarea { width: 100%; height: 100px; border-radius: 6px; border: 1px solid #ccc; padding: 8px; font-family: monospace; font-size: 14px; }
+    button { background: #2563eb; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; transition: 0.3s; }
+    button:hover { background: #1e40af; }
+    .output-card { margin-top: 20px; background: white; border-radius: 8px; border: 1px solid #ccc; padding: 10px; position: relative; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; background: #4ade80; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    pre { margin: 0; padding: 10px; background: #f1f5f9; border-radius: 6px; white-space: pre-wrap; word-break: break-word; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <div id="app" class="container">
+    <h2>Gemini Code Converter</h2>
+
+    <div class="editor-container">
+      <div class="editor">
+        <div class="editor-title">Original Code</div>
+        <textarea id="originalEditor"></textarea>
+      </div>
+      <div class="editor">
+        <div class="editor-title">Target Pattern / Structure</div>
+        <textarea id="targetEditor"></textarea>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <label><strong>AI Instruction / Prompt:</strong></label>
+      <textarea v-model="prompt" placeholder="e.g. Convert to Laravel Blade structure..."></textarea>
+    </div>
+
+    <div style="margin-top:20px; text-align:center;">
+      <button @click="convertCode" :disabled="loading">{{ loading ? "Converting..." : "Convert Code" }}</button>
+    </div>
+
+    <div v-if="convertedCode" class="output-card">
+      <button class="copy-btn" @click="copyOutput">Copy</button>
+      <pre>{{ convertedCode }}</pre>
+    </div>
+  </div>
+
+  <script type="module">
+    import { GoogleGenAI } from "@google/genai";
+
+    const { createApp, ref, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const originalCode = ref("");
+        const targetPattern = ref("");
+        const prompt = ref("");
+        const convertedCode = ref("");
+        const loading = ref(false);
+        let editorLeft, editorRight;
+        let ai;
+
+        onMounted(() => {
+          editorLeft = CodeMirror.fromTextArea(document.getElementById("originalEditor"), {
+            lineNumbers: true,
+            mode: "javascript",
+            theme: "default"
+          });
+          editorRight = CodeMirror.fromTextArea(document.getElementById("targetEditor"), {
+            lineNumbers: true,
+            mode: "javascript",
+            theme: "default"
+          });
+
+          ai = new GoogleGenAI({
+            apiKey: import.meta.env.VITE_GEMINI_API_KEY
+          });
+        });
+
+        async function convertCode() {
+          loading.value = true;
+          convertedCode.value = "";
+          originalCode.value = editorLeft.getValue();
+          targetPattern.value = editorRight.getValue();
+
+          try {
+            const response = await ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    {
+                      text: `Convert this code:\n${originalCode.value}\n\nTo follow this structure:\n${targetPattern.value}\n\nInstruction: ${prompt.value}\n\nOnly output the converted code.`,
+                    },
+                  ],
+                },
+              ],
+            });
+
+            let output = response?.candidates?.[0]?.content?.parts?.[0]?.text || "No output received.";
+	          output = output.replace(/^```[a-z]*\n/, "").replace(/```$/, "");
+            convertedCode.value = output.trim();
+          } catch (err) {
+            convertedCode.value = "Error: " + err.message;
+          } finally {
+            loading.value = false;
+          }
+        }
+
+        function copyOutput() {
+          navigator.clipboard.writeText(convertedCode.value);
+          alert("Copied to clipboard!");
+        }
+
+        return { originalCode, targetPattern, prompt, convertedCode, loading, convertCode, copyOutput };
+      }
+    }).mount("#app");
+  </script>
+</body>
+</html>
