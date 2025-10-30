@@ -9,23 +9,229 @@
   <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.js"></script>
   <style>
-    body { font-family: "Inter", sans-serif; background: #f8fafc; padding: 20px; color: #333; }
-    .container { max-width: 1200px; margin: auto; }
-    h2 { text-align: center; margin-bottom: 20px; }
-    .editor-container { display: flex; gap: 20px; }
-    .editor { flex: 1; background: white; border: 1px solid #ccc; border-radius: 8px; overflow: hidden; }
-    .editor-title { background: #2563eb; color: white; padding: 8px 12px; font-weight: bold; font-size: 14px; }
-    .CodeMirror { height: 300px; border: none; }
-    textarea { width: 100%; height: 100px; border-radius: 6px; border: 1px solid #ccc; padding: 8px; font-family: monospace; font-size: 14px; }
-    button { background: #2563eb; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; transition: 0.3s; }
-    button:hover { background: #1e40af; }
-    .output-card { margin-top: 20px; background: white; border-radius: 8px; border: 1px solid #ccc; padding: 10px; position: relative; }
-    .copy-btn { position: absolute; top: 10px; right: 10px; background: #4ade80; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 14px; }
-    pre { margin: 0; padding: 10px; background: #f1f5f9; border-radius: 6px; white-space: pre-wrap; word-break: break-word; font-family: monospace; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    body {
+      font-family: "Inter", sans-serif;
+      background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
+      padding: 0;
+      margin: 0;
+      color: #22223b;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 40px auto 0 auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(60, 72, 120, 0.13);
+      padding: 36px 32px 32px 32px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 32px;
+      font-size: 2.2rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: #2563eb;
+      text-shadow: 0 2px 8px #e0e7ff;
+    }
+    .editor-container {
+      display: flex;
+      gap: 28px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .editor {
+      flex: 1 1 350px;
+      background: #f1f5f9;
+      border: 1.5px solid #dbeafe;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+    }
+    .editor-title {
+      background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+      color: white;
+      padding: 12px 18px;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #dbeafe;
+    }
+    .CodeMirror {
+      height: 260px;
+      border: none;
+      background: #f8fafc;
+      font-size: 15px;
+      border-radius: 0 0 12px 12px;
+      padding: 0 8px;
+    }
+    textarea {
+      width: 100%;
+      height: 90px;
+      border-radius: 8px;
+      border: 1.5px solid #dbeafe;
+      padding: 10px 12px;
+      font-family: "Fira Mono", monospace;
+      font-size: 15px;
+      background: #f8fafc;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      resize: vertical;
+      transition: border 0.2s;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: #fff;
+    }
+    label {
+      font-weight: 600;
+      color: #2563eb;
+      margin-bottom: 6px;
+      display: block;
+      font-size: 1.05rem;
+    }
+    button {
+      background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.10);
+      margin-top: 8px;
+    }
+    button:disabled {
+      background: #a5b4fc;
+      cursor: not-allowed;
+      color: #e0e7ff;
+    }
+    button:hover:not(:disabled) {
+      background: linear-gradient(90deg, #1e40af 60%, #2563eb 100%);
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
+    }
+    .output-card {
+      margin-top: 32px;
+      background: #f8fafc;
+      border-radius: 14px;
+      border: 1.5px solid #dbeafe;
+      padding: 24px 18px 18px 18px;
+      position: relative;
+      box-shadow: 0 2px 12px rgba(37, 99, 235, 0.07);
+      min-height: 80px;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: linear-gradient(90deg, #4ade80 60%, #22d3ee 100%);
+      color: #22223b;
+      border: none;
+      padding: 7px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      box-shadow: 0 1px 4px rgba(34, 211, 238, 0.10);
+      transition: background 0.2s;
+    }
+    .copy-btn:hover {
+      background: linear-gradient(90deg, #22d3ee 60%, #4ade80 100%);
+      color: #1e293b;
+    }
+    pre {
+      margin: 0;
+      padding: 14px;
+      background: #e0e7ff;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "Fira Mono", monospace;
+      font-size: 15px;
+      color: #1e293b;
+      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.04);
+    }
+    @media (max-width: 900px) {
+      .editor-container {
+        flex-direction: column;
+        gap: 18px;
+      }
+      .container {
+        padding: 18px 6vw 18px 6vw;
+      }
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 8px 2vw 8px 2vw;
+      }
+      h2 {
+        font-size: 1.3rem;
+      }
+      .editor-title {
+        font-size: 0.95rem;
+        padding: 10px 10px;
+      }
+      .output-card {
+        padding: 12px 6px 10px 6px;
+      }
+    }
+  </style>
+  <style>
+    .loader-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+    .loader-content {
+      color: #021869;
+      padding: 20px 40px;
+      border-radius: 12px;
+      font-size: 1.5rem;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(37, 99, 235, 0.2);
+      display: flex
+  ;
+      align-items: center;
+      gap: 15px;
+      }
+  .spinner {
+      border: 4px solid rgb(1 5 23 / 30%);
+      border-top: 4px solid #080a53;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+  }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
   <div id="app" class="container">
+    <div v-if="loading" class="loader-overlay">
+      <div class="loader-content">
+        <div class="spinner"></div>
+        Thinking...
+      </div>
+    </div>
     <h2>Gemini Code Converter</h2>
 
     <div class="editor-container">
@@ -110,11 +316,11 @@
             let output = response?.candidates?.[0]?.content?.parts?.[0]?.text || "No output received.";
 	          output = output.replace(/^```[a-z]*\n/, "").replace(/```$/, "");
             convertedCode.value = output.trim();
-            originalCode.value = "";
-            targetPattern.value = "";
           } catch (err) {
             convertedCode.value = "Error: " + err.message;
           } finally {
+            originalCode.value = "";
+            targetPattern.value = "";
             loading.value = false;
           }
         }
